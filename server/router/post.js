@@ -5,25 +5,36 @@ const multer = require("multer");
 // 스키마 만들기
 const { Post } = require("../Model/Post.js");
 const { Counter } = require("../Model/Counter.js");
+const { User } = require("../Model/User.js");
 
 // 이미지 업로드
 const setUpload = require("../util/upload.js");
 
 // 글쓰기
 router.post("/write", (req, res) => {
-    let temp = req.body;
+    let temp = {
+        title: req.body.title,
+        content: req.body.content,
+        image: req.body.image
+    };
 
     Counter.findOne({ name: "counter" })
         .exec()
         .then((counter) => {
-            temp.postNum = counter.postNum;
+            temp.postNum = counter.postNum; // 번호 추가
 
-            const BlogPosts = new Post(temp);
-            BlogPosts.save()
-                .then(() => {
-                    Counter.updateOne({ name: "counter" }, { $inc: { postNum: 1 } })
+            User.findOne({ uid: req.body.uid })
+                .exec()
+                .then((userInfo) => {
+                    temp.author = userInfo._id  // 작가 추가
+
+                    const BlogPosts = new Post(temp);
+                    BlogPosts.save()
                         .then(() => {
-                            res.status(200).json({ success: true })
+                            Counter.updateOne({ name: "counter" }, { $inc: { postNum: 1 } })
+                                .then(() => {
+                                    res.status(200).json({ success: true })
+                                })
                         })
                 })
         })
@@ -35,7 +46,9 @@ router.post("/write", (req, res) => {
 
 // 글 목록
 router.post("/list", (req, res) => {
-    Post.find()
+    Post
+        .find()
+        .populate("author")
         .exec()
         .then((result) => {
             res.status(200).json({ success: true, postList: result })
@@ -48,7 +61,9 @@ router.post("/list", (req, res) => {
 
 // 글 상세 페이지
 router.post("/detail", (req, res) => {
-    Post.findOne({ postNum: req.body.postNum })
+    Post
+        .findOne({ postNum: req.body.postNum })
+        .populate("author")
         .exec()
         .then((result) => {
             console.log(result)

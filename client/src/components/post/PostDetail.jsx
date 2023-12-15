@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import axios from 'axios'
 
-const postDetail = () => {
+const PostDetail = () => {
     let params = useParams();   // 주소값
     const navigate = useNavigate();
+    const user = useSelector((state) => state.user)
 
-    const [postInfo, setPostInfo] = useState([]);   // 한개는 객체
+    const [postInfo, setPostInfo] = useState({});   // 한개는 객체
+    const [flag, setFlag] = useState(false);
 
     useEffect(() => {
         let body = {
@@ -18,6 +21,7 @@ const postDetail = () => {
             .then((response) => {
                 console.log(response)
                 setPostInfo(response.data.post)
+                setFlag(true);
             })
             .catch((err) => {
                 console.log(err)
@@ -47,21 +51,29 @@ const postDetail = () => {
 
     return (
         <div className='detail__wrap'>
-            <div className='detail__title'>
-                <h3>{postInfo.title}</h3>
-                <p className='auth'>뤼</p>
-            </div>
-            <div className='detail__content'>
-                {postInfo.content}
-                {postInfo.image ? <img src={postInfo.image} alt={postInfo.title} /> : null}
-            </div>
-            <div className='detail__btn'>
-                <Link to={`/modify/${postInfo.postNum}`}>수정하기</Link>
-                <button onClick={(e) => { DeleteHandel() }}>삭제하기</button>
-                <Link to="/list">목록 보기</Link>
-            </div>
+            {flag ? (
+                <>
+                    <div className='detail__title'>
+                        <h3>{postInfo.title}</h3>
+                        <p className='auth'>{postInfo.author.displayName}</p>
+                    </div>
+                    <div className='detail__content'>
+                        {postInfo.content}
+                        {postInfo.image ? <img src={postInfo.image} alt={postInfo.title} /> : null}
+                    </div>
+                    {user.uid === postInfo.author.uid && (
+                        <div className='detail__btn'>
+                            <Link to={`/modify/${postInfo.postNum}`}>수정하기</Link>
+                            <button onClick={(e) => { DeleteHandel() }}>삭제하기</button>
+                            <Link to="/list">목록 보기</Link>
+                        </div>
+                    )}
+                </>
+            ) : (
+                <div>로딩중</div>
+            )}
         </div>
     )
 }
 
-export default postDetail
+export default PostDetail

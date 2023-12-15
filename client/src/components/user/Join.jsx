@@ -34,6 +34,21 @@ const Join = () => {
         console.log(createdUser.user)
 
         // mongoDB 회원 가입
+        let body = {
+            email: createdUser.user.multiFactor.user.email,
+            displayName: createdUser.user.multiFactor.user.displayName,
+            uid: createdUser.user.multiFactor.user.uid,
+        }
+
+        axios.post("/api/user/join", body)
+            .then((response) => {
+                if (response.data.success) {
+                    alert("회원가입이 완료되었습니다.")
+                    navigate("/login")
+                } else {
+                    alert("회원가입이 실패하였습니다.")
+                }
+            })
     }
 
     return (
